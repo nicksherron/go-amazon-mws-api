@@ -22,31 +22,31 @@ type AmazonMWSAPI struct {
 	SellerId      string
 }
 
-func (api AmazonMWSAPI) genSignAndFetch(Action string, ActionPath string, Parameters map[string]string) (string, error) {
+func (api AmazonMWSAPI) genSignAndFetch(Action string, ActionPath string, Parameters map[string]string) ([]byte, error) {
 	genUrl, err := GenerateAmazonUrl(api, Action, ActionPath, Parameters)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	SetTimestamp(genUrl)
 
 	signedurl, err := SignAmazonUrl(genUrl, api)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	resp, err := http.Get(signedurl)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return string(body), nil
+	return body, nil
 }
 
 func GenerateAmazonUrl(api AmazonMWSAPI, Action string, ActionPath string, Parameters map[string]string) (finalUrl *url.URL, err error) {
@@ -62,7 +62,7 @@ func GenerateAmazonUrl(api AmazonMWSAPI, Action string, ActionPath string, Param
 	values := url.Values{}
 	values.Add("Action", Action)
 
-	if (api.AuthToken != "") {
+	if api.AuthToken != "" {
 		values.Add("MWSAuthToken", api.AuthToken)
 	}
 
